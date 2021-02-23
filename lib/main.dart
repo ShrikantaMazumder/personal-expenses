@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:personal_expense/widgets/chart.dart';
 import 'package:personal_expense/widgets/new_transaction.dart';
 import 'package:personal_expense/widgets/transaction_list.dart';
+import 'package:uuid/uuid.dart';
 
 import 'models/transaction.dart';
 
@@ -19,22 +20,22 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         accentColor: Colors.purple,
         fontFamily: 'QuickSand',
-        appBarTheme: AppBarTheme(
-          textTheme: ThemeData.light().textTheme.copyWith(
-                title: TextStyle(
-                  fontFamily: 'OpenSans',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold
-                ),
-              ),
-        ),
+        textTheme: ThemeData.light().textTheme.copyWith(
+            headline6: TextStyle(
+              fontFamily: 'OpenSans',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            button: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            )),
       ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  // This widget is the root of your application.
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -45,13 +46,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<Transaction> _userTransaction = [];
 
-  void _addNewTransaction(String title, double amount) {
+  // Filter 7 recent days
+  List<Transaction> get _recentTransaction {
+    return _userTransaction.where((tx) {
+      return tx.date.isAfter(
+        DateTime.now().subtract(
+          Duration(days: 7),
+        ),
+      );
+    }).toList();
+  }
+
+  // Add new transaction
+  void _addNewTransaction(String title, double amount, DateTime date) {
     final newTrx =
-        Transaction(title: title, amount: amount, date: DateTime.now());
-    id:
-    DateTime.now().toString();
+        Transaction(id: Uuid().v4(), title: title, amount: amount, date: date);
     setState(() {
       _userTransaction.add(newTrx);
+    });
+  }
+
+  // remove transaction
+  void _removeTransaction(String id) {
+    setState(() {
+      return _userTransaction.removeWhere((element) => id == element.id);
     });
   }
 
@@ -84,15 +102,11 @@ class _MyHomePageState extends State<MyHomePage> {
           // mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: double.infinity,
-              child: Card(
-                color: Colors.blue,
-                child: Text("CHART!"),
-                elevation: 5,
-              ),
+            Chart(_recentTransaction),
+            TransactionList(
+              userTransaction: _userTransaction,
+              removeFunc: _removeTransaction,
             ),
-            TransactionList(userTransaction: _userTransaction),
           ],
         ),
       ),

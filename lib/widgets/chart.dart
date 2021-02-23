@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_expense/models/transaction.dart';
+import 'package:personal_expense/widgets/chart_bar.dart';
 
 class Chart extends StatelessWidget {
   final List<Transaction> recentTransaction;
+
   Chart(this.recentTransaction);
+
   List<Map<String, Object>> get groupedTransactionValues {
     return List.generate(7, (index) {
       final weekDay = DateTime.now().subtract(Duration(days: index));
@@ -17,7 +20,17 @@ class Chart extends StatelessWidget {
           totalSum += recentTransaction[i].amount;
         }
       }
-      return {'day': DateFormat.E(weekDay), 'amount': totalSum};
+      return {
+        'day': DateFormat.E().format(weekDay).substring(0, 1),
+        'amount': totalSum
+      };
+    }).reversed.toList();
+  }
+
+  // Total spending of the week
+  double get totalCostOfWeek {
+    return groupedTransactionValues.fold(0.0, (sum, item) {
+      return sum + item['amount'];
     });
   }
 
@@ -26,6 +39,24 @@ class Chart extends StatelessWidget {
     return Card(
       margin: EdgeInsets.all(20),
       elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: groupedTransactionValues.map((data) {
+            return Flexible(
+              fit: FlexFit.tight,
+              child: ChartBar(
+                lable: data['day'],
+                spendingAmount: data['amount'],
+                spendingPercent: totalCostOfWeek == 0.0
+                    ? 0.0
+                    : (data['amount'] as double) / totalCostOfWeek,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 }

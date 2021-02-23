@@ -4,21 +4,27 @@ import 'package:personal_expense/models/transaction.dart';
 
 class TransactionList extends StatelessWidget {
   final List<Transaction> userTransaction;
+  final Function removeFunc;
 
-  const TransactionList({Key key, this.userTransaction}) : super(key: key);
+  const TransactionList({Key key, this.userTransaction, this.removeFunc})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 300,
+      height: 400,
       child: userTransaction.isEmpty
           ? Column(
               children: [
-                SizedBox(height: 40,),
+                SizedBox(
+                  height: 40,
+                ),
                 Text(
                   "No Transaction available",
                   style: Theme.of(context).textTheme.headline6,
                 ),
-                SizedBox(height: 20,),
+                SizedBox(
+                  height: 20,
+                ),
                 Container(
                   height: 200,
                   child: Image.asset(
@@ -31,50 +37,39 @@ class TransactionList extends StatelessWidget {
           : ListView.builder(
               itemBuilder: (context, index) {
                 return Card(
-                  child: Row(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 15,
-                        ),
-                        decoration: BoxDecoration(
-                            border: Border.all(
-                          color: Theme.of(context).primaryColor,
-                          width: 2,
-                        )),
-                        padding: EdgeInsets.all(10),
-                        child: Text(
-                          '\$${userTransaction[index].amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Theme.of(context).primaryColor,
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 5,
+                  ),
+                  elevation: 5,
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      child: Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: FittedBox(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              '\$${userTransaction[index].amount.toStringAsFixed(2)}',
+                            ),
                           ),
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Card(
-                            child: Text(
-                              userTransaction[index].title.toString(),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Card(
-                            child: Text(
-                              DateFormat.yMMMMd()
-                                  .format(userTransaction[index].date),
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
+                      radius: 30.0,
+                    ),
+                    title: Text(
+                      '${userTransaction[index].title}',
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                    subtitle: Text(
+                      DateFormat.yMMMd().format(userTransaction[index].date),
+                      style: Theme.of(context).textTheme.subtitle2,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () => removeFunc(userTransaction[index].id),
+                      color: Theme.of(context).errorColor,
+                    ),
                   ),
                 );
               },
