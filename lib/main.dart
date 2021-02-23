@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_expense/widgets/chart.dart';
@@ -8,6 +10,16 @@ import 'package:uuid/uuid.dart';
 import 'models/transaction.dart';
 
 void main() {
+  // Add this line to ensure everything is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Lock app only to portrait orientation although it is landscape
+
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
+
   runApp(MyApp());
 }
 
@@ -85,36 +97,121 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // Show chart
+  bool _showChart = false;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Personal Expenses'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _startAddNewData(context),
-          ),
-        ],
+    final mediaQuery = MediaQuery.of(context);
+
+    // Appbar variable
+    final PreferredSizeWidget _appBar = Platform.isIOS
+        ? CupertinoNavigationBar(
+            middle: Text('Personal Expenses'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  child: Icon(CupertinoIcons.add),
+                  onTap: () => _startAddNewData(context),
+                )
+              ],
+            ),
+          )
+        : AppBar(
+            title: Text('Personal Expenses'),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () => _startAddNewData(context),
+              ),
+            ],
+          );
+
+    // List variable
+    final _txlist = Container(
+      height: (mediaQuery.size.height -
+              _appBar.preferredSize.height -
+              mediaQuery.padding.top) *
+          0.70,
+      child: TransactionList(
+        userTransaction: _userTransaction,
+        removeFunc: _removeTransaction,
       ),
-      body: SingleChildScrollView(
+    );
+
+    // Landscape check
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    // Page body
+    final _pageBody = SafeArea(
+      child: SingleChildScrollView(
         child: Column(
           // mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Chart(_recentTransaction),
-            TransactionList(
-              userTransaction: _userTransaction,
-              removeFunc: _removeTransaction,
-            ),
+            if (isLandscape)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Show Chart',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                  Switch.adaptive(
+                      activeColor: Theme.of(context).accentColor,
+                      value: _showChart,
+                      onChanged: (val) {
+                        setState(() {
+                          _showChart = val;
+                        });
+                      })
+                ],
+              ),
+
+            // Execute if it is not landscape
+            if (!isLandscape)
+              Container(
+                height: (mediaQuery.size.height -
+                        _appBar.preferredSize.height -
+                        mediaQuery.padding.top) *
+                    0.30,
+                child: Chart(_recentTransaction),
+              ),
+            if (!isLandscape) _txlist,
+
+            // Execute if it is landscape
+            if (isLandscape)
+              _showChart
+                  ? Container(
+                      height: (mediaQuery.size.height -
+                              _appBar.preferredSize.height -
+                              mediaQuery.padding.top) *
+                          0.70,
+                      child: Chart(_recentTransaction),
+                    )
+                  : _txlist
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _startAddNewData(context),
-      ),
     );
+
+    return Platform.isIOS
+        ? CupertinoPageScaffold(
+            child: _pageBody,
+            navigationBar: _appBar,
+          )
+        : Scaffold(
+            appBar: _appBar,
+            body: _pageBody,
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: Platform.isIOS
+                ? Container()
+                : FloatingActionButton(
+                    child: Icon(Icons.add),
+                    onPressed: () => _startAddNewData(context),
+                  ),
+          );
   }
 }
