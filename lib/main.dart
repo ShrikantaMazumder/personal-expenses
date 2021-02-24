@@ -52,7 +52,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final titleController = TextEditingController();
   final amountController = TextEditingController();
 
@@ -94,6 +94,59 @@ class _MyHomePageState extends State<MyHomePage> {
           onTap: () {},
         );
       },
+    );
+  }
+
+  // App lifecycle methods
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  // this will triggered when state is changed
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+  }
+
+  @override
+  void dispose() {
+    // this will clear listener
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Landscape content
+
+  Widget _buildLandscapeContent() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Show Chart',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        Switch.adaptive(
+            activeColor: Theme.of(context).accentColor,
+            value: _showChart,
+            onChanged: (val) {
+              setState(() {
+                _showChart = val;
+              });
+            })
+      ],
+    );
+  }
+
+  Widget _buildPortraitContent(MediaQueryData mediaQuery, AppBar _appBar) {
+    return Container(
+      height: (mediaQuery.size.height -
+              _appBar.preferredSize.height -
+              mediaQuery.padding.top) *
+          0.30,
+      child: Chart(_recentTransaction),
     );
   }
 
@@ -150,34 +203,11 @@ class _MyHomePageState extends State<MyHomePage> {
           // mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (isLandscape)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Show Chart',
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  Switch.adaptive(
-                      activeColor: Theme.of(context).accentColor,
-                      value: _showChart,
-                      onChanged: (val) {
-                        setState(() {
-                          _showChart = val;
-                        });
-                      })
-                ],
-              ),
+            if (isLandscape) _buildLandscapeContent(),
 
             // Execute if it is not landscape
-            if (!isLandscape)
-              Container(
-                height: (mediaQuery.size.height -
-                        _appBar.preferredSize.height -
-                        mediaQuery.padding.top) *
-                    0.30,
-                child: Chart(_recentTransaction),
-              ),
+            if (!isLandscape) _buildPortraitContent(mediaQuery, _appBar),
+
             if (!isLandscape) _txlist,
 
             // Execute if it is landscape

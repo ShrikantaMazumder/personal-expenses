@@ -9,17 +9,43 @@ class NewTransaction extends StatefulWidget {
   // Handling user input here
   // String titleInput;
   // String amountInput;
-  NewTransaction(this.addNewTransaction);
+  NewTransaction(this.addNewTransaction) {
+    print("New transaction widget");
+  }
 
   @override
-  _NewTransactionState createState() => _NewTransactionState();
+  _NewTransactionState createState() {
+    print("createState new transaction widget");
+    return _NewTransactionState();
+  }
 }
 
 class _NewTransactionState extends State<NewTransaction> {
+  _NewTransactionState() {
+    print("New transaction state");
+  }
+
+  @override
+  void initState() {
+    print("initState()");
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant NewTransaction oldWidget) {
+    print("didUpdateWidget()");
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    print("Dispose");
+    super.dispose();
+  }
+
   final titleController = TextEditingController();
   final amountController = TextEditingController();
   DateTime _selectedDate;
-
   void submitData() {
     if (amountController.text.isEmpty) {
       return;
